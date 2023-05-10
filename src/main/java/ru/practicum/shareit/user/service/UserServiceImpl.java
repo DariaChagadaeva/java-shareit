@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto updateUser(Long userId, UserDto userDto) {
-        User user = checkUserExists(userId);
+        User user = getUserIfItExists(userId);
         if (userDto.getName() != null) {
                 user.setName(userDto.getName());
         }
@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUserById(Long userId) {
-        return UserMapper.toUserDto(checkUserExists(userId));
+        return UserMapper.toUserDto(getUserIfItExists(userId));
     }
 
     @Override
@@ -63,11 +63,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUserById(Long userId) {
-        checkUserExists(userId);
+        getUserIfItExists(userId);
         userRepository.deleteUserById(userId);
     }
 
-    private User checkUserExists(Long userId) {
+    private User getUserIfItExists(Long userId) {
         return userRepository.getUserById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("No user with id " + userId));
     }

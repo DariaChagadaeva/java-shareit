@@ -23,7 +23,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {
-        User user = checkUserExists(userId);
+        User user = getUserIfItExists(userId);
         Item item = ItemMapper.fromDtoToItem(itemDto);
         item.setOwner(user);
         itemRepository.addItem(item);
@@ -33,8 +33,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
-        checkUserExists(userId);
-        Item item = checkItem(userId, itemId);
+        getUserIfItExists(userId);
+        Item item = getItemIfItExists(userId, itemId);
         if (!item.getOwner().getId().equals(userId)) {
             throw new EntityNotFoundException("No owner with id " + userId);
         }
@@ -53,12 +53,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItemById(Long userId, Long itemId) {
-        return ItemMapper.toItemDto(checkItem(userId, itemId));
+        return ItemMapper.toItemDto(getItemIfItExists(userId, itemId));
     }
 
     @Override
     public List<ItemDto> getUserItems(Long userId) {
-        checkUserExists(userId);
+        getUserIfItExists(userId);
         return itemRepository.getAllItems().stream().filter(item
                 -> item.getOwner().getId().equals(userId))
                 .map(ItemMapper::toItemDto)
@@ -78,13 +78,13 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
     }
 
-    private User checkUserExists(Long userId) {
+    private User getUserIfItExists(Long userId) {
         return userRepository.getUserById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("No user with id " + userId));
     }
 
-    private Item checkItem(Long userId, Long itemId) {
-        checkUserExists(userId);
+    private Item getItemIfItExists(Long userId, Long itemId) {
+        getUserIfItExists(userId);
         return itemRepository.getItemById(itemId)
                 .orElseThrow(() -> new EntityNotFoundException("No item with id " + itemId));
     }
