@@ -3,9 +3,9 @@ package ru.practicum.shareit.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.EntityAlreadyExistsException;
 import ru.practicum.shareit.exceptions.EntityNotFoundException;
-import ru.practicum.shareit.exceptions.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
@@ -20,19 +20,18 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
+    @Transactional
     @Override
     public UserDto addUser(UserDto userDto) {
-        if (userDto.getEmail() == null) {
-            throw new ValidationException("Email is empty");
-        }
         if (checkEmail(userDto)) {
             throw new EntityAlreadyExistsException("User with email " + userDto.getEmail() + " already exists");
         }
-        User user = userRepository.addUser(UserMapper.fromDtoToUser(userDto));
+        User user = userRepository.save(UserMapper.fromDtoToUser(userDto));
         log.info("New user added : {}", user);
         return UserMapper.toUserDto(user);
     }
 
+    @Transactional
     @Override
     public UserDto updateUser(Long userId, UserDto userDto) {
         User user = getUserIfItExists(userId);
@@ -58,22 +57,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getAllUsers() {
-        return userRepository.getAllUsers().stream().map(UserMapper::toUserDto).collect(Collectors.toList());
+        return userRepository.findAll().stream().map(UserMapper::toUserDto).collect(Collectors.toList());
     }
 
     @Override
     public void deleteUserById(Long userId) {
         getUserIfItExists(userId);
-        userRepository.deleteUserById(userId);
+        userRepository.deleteById(userId);
     }
 
     private User getUserIfItExists(Long userId) {
-        return userRepository.getUserById(userId)
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("No user with id " + userId));
     }
 
     private boolean checkEmail(UserDto userDto) {
-        return userRepository.getAllUsers().stream().anyMatch(user -> user.getEmail().equals(userDto.getEmail()));
+        return userRepository.findAll().stream().anyMatch(user -> user.getEmail().equals(userDto.getEmail()));
     }
 
 }
