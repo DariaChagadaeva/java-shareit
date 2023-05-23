@@ -55,7 +55,7 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto setBookingStatus(Long userId, Long bookingId, Boolean approved) {
         Booking booking = getBookingIfExists(bookingId);
         checkOwner(userId, booking);
-        if (booking.getStatus().equals(BookingStatus.APPROVED)) {
+        if (BookingStatus.APPROVED == booking.getStatus()) {
             throw new ValidationException("Booking is already confirmed");
         }
         if (approved) {
@@ -80,7 +80,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingDto> getAllBookerBookings(Long userId, String state) {
         checkUser(userId);
-        BookingState newState = parseState(state);
+        BookingState newState = BookingState.parseState(state);
         switch (newState) {
             case ALL:
                 return bookingRepository.findAllByBookerIdOrderByStartDesc(userId).stream()
@@ -104,7 +104,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingDto> getAllBookerItemsBooking(Long ownerId, String state) {
         checkUser(ownerId);
-        BookingState newState = parseState(state);
+        BookingState newState = BookingState.parseState(state);
         switch (newState) {
             case ALL:
                 return bookingRepository.findAllByOwnerIdOrderByStartDesc(ownerId).stream()
@@ -181,11 +181,5 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-    private BookingState parseState(String state) {
-        try {
-            return BookingState.valueOf(state);
-        } catch (RuntimeException e) {
-            throw new ValidationException("Unknown state: UNSUPPORTED_STATUS");
-        }
-    }
+
 }
