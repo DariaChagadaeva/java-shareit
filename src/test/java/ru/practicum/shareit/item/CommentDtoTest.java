@@ -20,7 +20,7 @@ class CommentDtoTest {
 
     @Test
     void testUserDto() throws Exception {
-        LocalDateTime createdTime =LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime createdTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         CommentDto commentDto = new CommentDto(1L, "comment", "authorName", createdTime);
 
         JsonContent<CommentDto> result = json.write(commentDto);

@@ -9,6 +9,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,7 +21,7 @@ class ItemRequestDtoTest {
 
     @Test
     void testItemRequestWithItems() throws Exception {
-        LocalDateTime createdTime = LocalDateTime.now();
+        LocalDateTime createdTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         ItemDto itemDto = new ItemDto(5L, "item", "item desc", true, 3L);
         List<ItemDto> itemDtoList = List.of(itemDto);
         ItemRequestDto itemRequestDto = new ItemRequestDto(3L, "desc", createdTime, itemDtoList);

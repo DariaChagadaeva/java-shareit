@@ -46,6 +46,7 @@ class BookingRepositoryTest {
     Booking bookingPast;
     LocalDateTime currentTime = LocalDateTime.now();
     Pageable page = PageRequest.of(0, 10);
+
     @BeforeEach
     void start() {
         LocalDateTime pastTime = currentTime.minusDays(10);
