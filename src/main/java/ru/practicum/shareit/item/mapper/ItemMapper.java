@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.mapper;
 
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemWithDates;
 import ru.practicum.shareit.item.model.Item;
 
 public class ItemMapper {
@@ -19,6 +20,15 @@ public class ItemMapper {
                 itemDto.getName(),
                 itemDto.getDescription(),
                 itemDto.getAvailable()
+        );
+    }
+
+    public static ItemWithDates toItemWithDatesDto(Item item) {
+        return new ItemWithDates(
+                item.getId(),
+                item.getName(),
+                item.getDescription(),
+                item.getAvailable()
         );
     }
 }
