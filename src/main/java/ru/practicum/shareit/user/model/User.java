@@ -21,4 +21,9 @@ public class User {
     @Column(name = "email", nullable = false)
     @Email
     String email;
+
+    public User(String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
 }

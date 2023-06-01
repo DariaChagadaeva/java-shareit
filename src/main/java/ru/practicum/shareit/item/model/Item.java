@@ -1,8 +1,6 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import javax.persistence.*;
@@ -11,6 +9,8 @@ import javax.persistence.*;
 @Table(name = "items", schema = "public")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Item {
     @Id
@@ -24,6 +24,7 @@ public class Item {
     Boolean available;
     @Column(name = "owner_id")
     Long ownerId;
+    //@ManyToOne(fetch = FetchType.EAGER)
     @Column(name = "request_id")
     Long requestId;
 

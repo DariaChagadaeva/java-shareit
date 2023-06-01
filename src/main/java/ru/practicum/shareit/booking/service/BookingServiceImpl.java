@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -78,50 +79,52 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getAllBookerBookings(Long userId, String state) {
+    public List<BookingDto> getAllBookerBookings(Long userId, String state, int from, int size) {
         checkUser(userId);
         BookingState newState = BookingState.parseState(state);
+        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
         switch (newState) {
             case ALL:
-                return bookingRepository.findAllByBookerIdOrderByStartDesc(userId).stream()
-                        .map(BookingMapper::toBookingDto).collect(Collectors.toList());
+                return bookingRepository.findAllByBookerIdOrderByStartDesc(userId, page).getContent()
+                        .stream().map(BookingMapper::toBookingDto).collect(Collectors.toList());
             case PAST:
-                return bookingRepository.findAllByBookerIdAndEndIsBeforeOrderByStartDesc(userId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDto).collect(Collectors.toList());
+                return bookingRepository.findAllByBookerIdAndEndIsBeforeOrderByStartDesc(userId, LocalDateTime.now(), page)
+                        .getContent().stream().map(BookingMapper::toBookingDto).collect(Collectors.toList());
             case FUTURE:
-                return bookingRepository.findAllByBookerIdAndStartIsAfterOrderByStartDesc(userId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDto).collect(Collectors.toList());
+                return bookingRepository.findAllByBookerIdAndStartIsAfterOrderByStartDesc(userId, LocalDateTime.now(), page)
+                        .getContent().stream().map(BookingMapper::toBookingDto).collect(Collectors.toList());
             case CURRENT:
-                return bookingRepository.findAllByBookerIdCurrentBookings(userId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDto).collect(Collectors.toList());
+                return bookingRepository.findAllByBookerIdCurrentBookings(userId, LocalDateTime.now(), page)
+                        .getContent().stream().map(BookingMapper::toBookingDto).collect(Collectors.toList());
             default:
                 BookingStatus status = BookingStatus.valueOf(String.valueOf(state));
-                return bookingRepository.findALLByBookerIdAndStatusOrderByStartDesc(userId, status).stream()
-                        .map(BookingMapper::toBookingDto).collect(Collectors.toList());
+                return bookingRepository.findALLByBookerIdAndStatusOrderByStartDesc(userId, status, page)
+                        .getContent().stream().map(BookingMapper::toBookingDto).collect(Collectors.toList());
         }
     }
 
     @Override
-    public List<BookingDto> getAllBookerItemsBooking(Long ownerId, String state) {
+    public List<BookingDto> getAllBookerItemsBooking(Long ownerId, String state, int from, int size) {
         checkUser(ownerId);
         BookingState newState = BookingState.parseState(state);
+        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
         switch (newState) {
             case ALL:
-                return bookingRepository.findAllByOwnerIdOrderByStartDesc(ownerId).stream()
+                return bookingRepository.findAllByOwnerIdOrderByStartDesc(ownerId, page).stream()
                         .map(BookingMapper::toBookingDto).collect(Collectors.toList());
             case PAST:
-                return bookingRepository.findAllByOwnerIdAndEndIsBeforeOrderByStartDesc(ownerId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDto).collect(Collectors.toList());
+                return bookingRepository.findAllByOwnerIdAndEndIsBeforeOrderByStartDesc(ownerId, LocalDateTime.now(), page)
+                        .getContent().stream().map(BookingMapper::toBookingDto).collect(Collectors.toList());
             case FUTURE:
-                return bookingRepository.findAllByOwnerIdAndStartAfterOrderByStartDesc(ownerId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDto).collect(Collectors.toList());
+                return bookingRepository.findAllByOwnerIdAndStartAfterOrderByStartDesc(ownerId, LocalDateTime.now(), page)
+                        .getContent().stream().map(BookingMapper::toBookingDto).collect(Collectors.toList());
             case CURRENT:
-                return bookingRepository.findAllByOwnerIdCurrentBookings(ownerId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDto).collect(Collectors.toList());
+                return bookingRepository.findAllByOwnerIdCurrentBookings(ownerId, LocalDateTime.now(), page)
+                        .getContent().stream().map(BookingMapper::toBookingDto).collect(Collectors.toList());
             default:
                 BookingStatus status = BookingStatus.valueOf(String.valueOf(state));
-                return bookingRepository.findAllByOwnerIdAndStatusOrderByStartDesc(ownerId, status).stream()
-                        .map(BookingMapper::toBookingDto).collect(Collectors.toList());
+                return bookingRepository.findAllByOwnerIdAndStatusOrderByStartDesc(ownerId, status, page)
+                        .getContent().stream().map(BookingMapper::toBookingDto).collect(Collectors.toList());
         }
     }
 
@@ -160,7 +163,7 @@ public class BookingServiceImpl implements BookingService {
     private boolean checkIfBookerIsNotOwner(Long userId, Long itemId) {
         if (userId.equals(itemRepository.findById(itemId)
                 .orElseThrow(() -> new EntityNotFoundException("No item with id " + itemId)).getOwnerId())) {
-            throw new OwnerException("User is not the owner of the item");
+            throw new OwnerException("User is the owner of the item");
         } else {
             return true;
         }
