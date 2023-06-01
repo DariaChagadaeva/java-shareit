@@ -101,6 +101,7 @@ class ItemRequestServiceImplTest {
         assertThrows(EntityNotFoundException.class,
                 () -> itemRequestService.getRequestById(userDto.getId(), 0L));
     }
+
     @Test
     void getAllRequests_whenUserFound_thenReturnRequestsList() {
         assertThat(itemRequestService.getAllRequests(owner.getId(), 0, 10), hasSize(1));
