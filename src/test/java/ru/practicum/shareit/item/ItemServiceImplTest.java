@@ -97,6 +97,8 @@ class ItemServiceImplTest {
     void updateItem_whenUserAndItemFound_thenReturnUpdatedItem() {
         ItemDto newItem = itemDto;
         newItem.setName("newItem");
+        newItem.setDescription("newDesc");
+        newItem.setAvailable(false);
 
         assertThat(itemService.updateItem(owner.getId(), newItem.getId(), newItem), equalTo(itemDto));
     }
@@ -105,6 +107,12 @@ class ItemServiceImplTest {
     void updateItem_whenUserIsNotTheOwner_thenReturnEntityNotFoundException() {
         assertThrows(EntityNotFoundException.class,
                 () -> itemService.updateItem(1L, 1L, itemDto));
+    }
+
+    @Test
+    void updateItem_whenItemNotFound_thenReturnEntityNotFoundException() {
+        assertThrows(EntityNotFoundException.class,
+                () -> itemService.updateItem(userDto.getId(), 0L, itemDto));
     }
 
     @Test
@@ -124,12 +132,27 @@ class ItemServiceImplTest {
     }
 
     @Test
+    void getUserItems_whenUserNotFound_thenReturnEntityNotFoundException() {
+        assertThrows(EntityNotFoundException.class,
+                () -> itemService.getUserItems(0L, 0, 10));
+    }
+
+    @Test
     void searchItems_whenTextIsNotEmpty_ReturnListOfItems() {
         assertThat(itemService.searchItems("item", 0, 10), hasSize(1));
     }
 
     @Test
     void searchItems_whenTextIsEmpty_ReturnEmptyListOfItems() {
+        assertThat(itemService.searchItems("", 0, 10), hasSize(0));
+    }
+
+    @Test
+    void searchItems_whenItemIsNotAvailable_ReturnEmptyListOfItems() {
+        ItemDto newItem = itemDto;
+        newItem.setAvailable(false);
+        newItem = itemService.updateItem(owner.getId(), itemDto.getId(), newItem);
+
         assertThat(itemService.searchItems("", 0, 10), hasSize(0));
     }
 

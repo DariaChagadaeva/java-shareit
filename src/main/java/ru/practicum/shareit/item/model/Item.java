@@ -24,14 +24,6 @@ public class Item {
     Boolean available;
     @Column(name = "owner_id")
     Long ownerId;
-    //@ManyToOne(fetch = FetchType.EAGER)
     @Column(name = "request_id")
     Long requestId;
-
-    public Item(Long id, String name, String description, Boolean available) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.available = available;
-    }
 }

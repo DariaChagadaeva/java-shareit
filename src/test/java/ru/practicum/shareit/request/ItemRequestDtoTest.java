@@ -21,7 +21,7 @@ class ItemRequestDtoTest {
 
     @Test
     void testItemRequestWithItems() throws Exception {
-        LocalDateTime createdTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime createdTime = LocalDateTime.now();
         ItemDto itemDto = new ItemDto(5L, "item", "item desc", true, 3L);
         List<ItemDto> itemDtoList = List.of(itemDto);
         ItemRequestDto itemRequestDto = new ItemRequestDto(3L, "desc", createdTime, itemDtoList);

@@ -36,10 +36,10 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto addBooking(Long userId, BookingRequest bookingRequest) {
         checkUser(userId);
         checkItemIsAvailable(bookingRequest.getItemId());
+        checkIfBookerIsNotOwner(userId, bookingRequest.getItemId());
         if (checkDates(bookingRequest.getStart(), bookingRequest.getEnd())) {
             throw new ValidationException("Wrong booking time");
         }
-        checkIfBookerIsNotOwner(userId, bookingRequest.getItemId());
         Booking booking = BookingMapper.toBookingModel(bookingRequest);
         booking.setItem(itemRepository.findById(bookingRequest.getItemId())
                 .orElseThrow(() -> new EntityNotFoundException("No item with id " + bookingRequest.getItemId())));
@@ -183,6 +183,4 @@ public class BookingServiceImpl implements BookingService {
             throw new EntityNotFoundException("Booking is not available for viewing");
         }
     }
-
-
 }

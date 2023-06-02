@@ -30,6 +30,7 @@ class UserServiceImplTest {
     @Autowired
     UserService userService;
     UserDto userDto;
+    UserDto userDto2;
 
     @BeforeEach
     void start() {
@@ -38,17 +39,23 @@ class UserServiceImplTest {
                 .email("user1@user.com")
                 .build();
         userDto = userService.addUser(newUser);
+
+        UserDto newUser2 = UserDto.builder()
+                .name("user2")
+                .email("user2@user.com")
+                .build();
+        userDto2 = userService.addUser(newUser2);
     }
 
     @Test
     void addUser() {
-        assertThat(userService.getAllUsers(), hasSize(1));
+        assertThat(userService.getAllUsers(), hasSize(2));
     }
 
     @Test
     void addUser_whenUserHasDuplicateEmail_thenReturnEntityAlreadyExistsException() {
         UserDto newUser = UserDto.builder()
-                .name("user2")
+                .name("user3")
                 .email("user1@user.com").build();
 
         assertThrows(EntityAlreadyExistsException.class,
@@ -98,6 +105,16 @@ class UserServiceImplTest {
     }
 
     @Test
+    void updateUser_whenAnotherUserHasDuplicateEmail_thenReturnEntityAlreadyExistsException() {
+        UserDto newUser3 = UserDto.builder()
+                .email("user1@user.com")
+                .build();
+
+        assertThrows(EntityAlreadyExistsException.class,
+                () -> userService.updateUser(2L, newUser3));
+    }
+
+    @Test
     void getUserById() {
         assertThat(userDto.getName(), equalTo(userService.getUserById(1L).getName()));
         assertThat(userDto.getEmail(), equalTo(userService.getUserById(1L).getEmail()));
@@ -105,12 +122,13 @@ class UserServiceImplTest {
 
     @Test
     void getAllUsers() {
-        assertThat(userService.getAllUsers(), hasSize(1));
+        assertThat(userService.getAllUsers(), hasSize(2));
     }
 
     @Test
     void deleteUserById() {
         userService.deleteUserById(1L);
-        assertThat(userService.getAllUsers(), hasSize(0));
+        assertThat(userService.getAllUsers(), hasSize(1));
+        assertThat(userService.getAllUsers().get(0).getId(), is(userDto2.getId()));
     }
 }

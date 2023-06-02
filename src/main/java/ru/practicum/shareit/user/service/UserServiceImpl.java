@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
             user.setEmail(userDto.getEmail());
         }
         log.info("User updated : {}", user);
-        return UserMapper.toUserDto(user);
+        return UserMapper.toUserDto(userRepository.save(user));
     }
 
     @Override
@@ -74,5 +74,4 @@ public class UserServiceImpl implements UserService {
     private boolean checkEmail(UserDto userDto) {
         return userRepository.findAll().stream().anyMatch(user -> user.getEmail().equals(userDto.getEmail()));
     }
-
 }

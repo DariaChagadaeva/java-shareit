@@ -11,11 +11,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingRequest;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.service.BookingServiceImpl;
+import ru.practicum.shareit.exceptions.EntityNotFoundException;
+import ru.practicum.shareit.exceptions.ItemIsNotAvailable;
+import ru.practicum.shareit.exceptions.OwnerException;
+import ru.practicum.shareit.exceptions.ValidationException;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -38,6 +45,9 @@ public class BookingServiceImplTest {
 
     @Mock
     UserRepository userRepository;
+
+    @Mock
+    ItemRepository itemRepository;
 
     @InjectMocks
     BookingServiceImpl bookingService;
@@ -182,6 +192,140 @@ public class BookingServiceImplTest {
         assertThrows(IllegalArgumentException.class, () ->
                 bookingService.getAllBookerItemsBooking(2L, "WRONG_STATE", 0, 10));
 
+    }
+
+    @Test
+    void addBooking_whenUserIsNotFound_thenReturnEntityNotFoundException() {
+        LocalDateTime newStart = LocalDateTime.now();
+        LocalDateTime newEnd = newStart.minusDays(1);
+        BookingRequest newBookingRequest = new BookingRequest(item.getId(), newStart, newEnd);
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
+                () -> bookingService.addBooking(0L, newBookingRequest));
+        assertEquals("No user with id " + 0L, ex.getMessage());
+    }
+
+    @Test
+    void addBooking_whenItemIsNotAvailable_ItemIsNotAvailableException() {
+        LocalDateTime newStart = LocalDateTime.now();
+        LocalDateTime newEnd = newStart.minusDays(1);
+        BookingRequest newBookingRequest = new BookingRequest(item.getId(), newStart, newEnd);
+        item.setAvailable(false);
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+
+        ItemIsNotAvailable ex = assertThrows(ItemIsNotAvailable.class,
+                () -> bookingService.addBooking(user.getId(), newBookingRequest));
+        assertEquals("Item is not available for booking", ex.getMessage());
+    }
+
+    @Test
+    void addBooking_whenUserIsOwner_thenReturnOwnerException() {
+        LocalDateTime newStart = LocalDateTime.now();
+        LocalDateTime newEnd = newStart.minusDays(1);
+        BookingRequest newBookingRequest = new BookingRequest(item.getId(), newStart, newEnd);
+
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+
+        OwnerException ex = assertThrows(OwnerException.class,
+                () -> bookingService.addBooking(owner.getId(), newBookingRequest));
+
+        assertEquals("User is the owner of the item", ex.getMessage());
+    }
+
+    @Test
+    void addBooking_whenDateIsWrong_thenReturnValidationException() {
+        LocalDateTime newStart = LocalDateTime.now();
+        LocalDateTime newEnd = newStart.minusDays(1);
+        BookingRequest newBookingRequest = new BookingRequest(item.getId(), newStart, newEnd);
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+
+        ValidationException ex = assertThrows(ValidationException.class,
+                () -> bookingService.addBooking(user.getId(), newBookingRequest));
+        assertEquals("Wrong booking time", ex.getMessage());
+    }
+
+    @Test
+    void setBookingStatus_whenOwnerApprovedBooking_thenReturnBookingWithStatusApproved() {
+        bookingCurrent.setStatus(BookingStatus.WAITING);
+        when(bookingRepository.findById(bookingCurrent.getId())).thenReturn(Optional.of(bookingCurrent));
+        when(bookingRepository.save(bookingCurrent)).thenReturn(bookingCurrent);
+
+        BookingDto actualBooking = bookingService.setBookingStatus(owner.getId(), bookingCurrent.getId(), true);
+
+        assertEquals(bookingCurrent.getStatus(), actualBooking.getStatus());
+    }
+
+    @Test
+    void setBookingStatus_whenOwnerRejectedBooking_thenReturnBookingWithStatusRejected() {
+        bookingCurrent.setStatus(BookingStatus.WAITING);
+        when(bookingRepository.findById(bookingCurrent.getId())).thenReturn(Optional.of(bookingCurrent));
+        when(bookingRepository.save(bookingCurrent)).thenReturn(bookingCurrent);
+
+        BookingDto actualBooking = bookingService.setBookingStatus(owner.getId(), bookingCurrent.getId(), false);
+
+        assertEquals(bookingCurrent.getStatus(), actualBooking.getStatus());
+    }
+
+    @Test
+    void setBookingStatus_whenStatusIsAlreadyApproved_thenReturnValidationException() {
+        when(bookingRepository.findById(bookingCurrent.getId())).thenReturn(Optional.of(bookingCurrent));
+
+        ValidationException ex = assertThrows(ValidationException.class,
+                () -> bookingService.setBookingStatus(owner.getId(), bookingCurrent.getId(), true));
+        assertEquals("Booking is already confirmed", ex.getMessage());
+    }
+
+    @Test
+    void setBookingStatus_whenUserIsNotTheOwnerOfTheItem_thenReturnOwnerException() {
+        when(bookingRepository.findById(bookingCurrent.getId())).thenReturn(Optional.of(bookingCurrent));
+
+        OwnerException ex = assertThrows(OwnerException.class,
+                () -> bookingService.setBookingStatus(user.getId(), bookingCurrent.getId(), true));
+        assertEquals("User is not the owner of the item", ex.getMessage());
+    }
+
+    @Test
+    void getBookingById() {
+        when(bookingRepository.findById(bookingCurrent.getId())).thenReturn(Optional.of(bookingCurrent));
+
+        BookingDto expectedBooking = BookingMapper.toBookingDto(bookingCurrent);
+        BookingDto actualBooking = bookingService.getBookingById(user.getId(), bookingCurrent.getId());
+
+        assertEquals(expectedBooking, actualBooking);
+    }
+
+    @Test
+    void getBookingById_whenBookingNotFound_thenReturnEntityNotFoundException() {
+        when(bookingRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
+                () -> bookingService.getBookingById(user.getId(), 0L));
+        assertEquals("No booking with id " + 0L, ex.getMessage());
+    }
+
+    @Test
+    void getBookingById_whenUserNotFound_thenReturnEntityNotFoundException() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
+                () -> bookingService.getBookingById(0L, bookingCurrent.getId()));
+        assertEquals("No user with id " + 0L, ex.getMessage());
+    }
+
+    @Test
+    void getBookingById_whenUserIsNeitherTheOwnerNorTheBooker_thenReturnEntityNotFoundException() {
+        User newUser = setUser(3L, "user3", "user3@user.com");
+
+        when(userRepository.findById(newUser.getId())).thenReturn(Optional.of(newUser));
+        when(bookingRepository.findById(bookingCurrent.getId())).thenReturn(Optional.of(bookingCurrent));
+
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
+                () -> bookingService.getBookingById(3L, bookingCurrent.getId()));
+        assertEquals("Booking is not available for viewing", ex.getMessage());
     }
 
     private User setUser(Long id, String name, String email) {
