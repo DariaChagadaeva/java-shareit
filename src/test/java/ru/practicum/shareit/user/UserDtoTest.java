@@ -1,5 +1,7 @@
 package ru.practicum.shareit.user;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
@@ -10,10 +12,11 @@ import ru.practicum.shareit.user.dto.UserDto;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JsonTest
+@FieldDefaults(level = AccessLevel.PRIVATE)
 class UserDtoTest {
 
     @Autowired
-    private JacksonTester<UserDto> json;
+    JacksonTester<UserDto> json;
 
     @Test
     void testUserDto() throws Exception {
