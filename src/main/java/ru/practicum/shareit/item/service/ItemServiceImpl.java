@@ -1,7 +1,11 @@
 package ru.practicum.shareit.item.service;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingForItem;
@@ -31,11 +35,12 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemServiceImpl implements ItemService {
-    private final ItemRepository itemRepository;
-    private final UserRepository userRepository;
-    private final BookingRepository bookingRepository;
-    private final CommentRepository commentRepository;
+    final ItemRepository itemRepository;
+    final UserRepository userRepository;
+    final BookingRepository bookingRepository;
+    final CommentRepository commentRepository;
 
     @Transactional
     @Override
@@ -43,9 +48,12 @@ public class ItemServiceImpl implements ItemService {
         checkUser(userId);
         Item item = ItemMapper.fromDtoToItem(itemDto);
         item.setOwnerId(userId);
-        itemRepository.save(item);
-        log.info("New item added : {}", item);
-        return ItemMapper.toItemDto(item);
+        if (itemDto.getRequestId() != null) {
+            item.setRequestId(itemDto.getRequestId());
+        }
+        Item savedItem = itemRepository.save(item);
+        log.info("New item added : {}", savedItem);
+        return ItemMapper.toItemDto(savedItem);
     }
 
     @Transactional
@@ -87,20 +95,22 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemWithDates> getUserItems(Long userId) {
+    public List<ItemWithDates> getUserItems(Long userId, int from, int size) {
         getUserIfItExists(userId);
-        List<Item> items = itemRepository.findAllByOwnerId(userId);
+        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+        Page<Item> items = itemRepository.findAllByOwnerId(userId, page);
         return items.stream().map(item -> getItemById(userId, item.getId()))
                 .sorted(Comparator.comparing(ItemWithDates::getId)).collect(Collectors.toList());
     }
 
     @Override
-    public List<ItemDto> searchItems(String text) {
+    public List<ItemDto> searchItems(String text, int from, int size) {
         if (text.isEmpty()) {
             return List.of();
         }
         String textSearch = text.toLowerCase();
-        return itemRepository.findAll().stream()
+        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+        return itemRepository.findAll(page).stream()
                 .filter(item -> item.getName().toLowerCase().contains(textSearch)
                 || (item.getDescription().toLowerCase().contains(textSearch) && item.getAvailable()))
                 .map(ItemMapper::toItemDto)

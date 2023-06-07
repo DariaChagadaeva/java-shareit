@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item.controller;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CommentRequest;
@@ -14,9 +16,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/items")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemController {
-    private final ItemService itemService;
-    private static final String USER_HEADER = "X-Sharer-User-Id";
+    final ItemService itemService;
+    static final String USER_HEADER = "X-Sharer-User-Id";
 
     @PostMapping
     public ItemDto addItem(@RequestHeader(USER_HEADER) Long userId, @Valid @RequestBody ItemDto itemDto) {
@@ -36,13 +39,17 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemWithDates> getUserItems(@RequestHeader(USER_HEADER) Long userId) {
-        return itemService.getUserItems(userId);
+    public List<ItemWithDates> getUserItems(@RequestHeader(USER_HEADER) Long userId,
+                                            @RequestParam(defaultValue = "0") int from,
+                                            @RequestParam(defaultValue = "10") int size) {
+        return itemService.getUserItems(userId, from, size);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItems(@RequestParam String text) {
-        return itemService.searchItems(text);
+    public List<ItemDto> searchItems(@RequestParam String text,
+                                     @RequestParam(defaultValue = "0") int from,
+                                     @RequestParam(defaultValue = "10") int size) {
+        return itemService.searchItems(text, from, size);
     }
 
     @PostMapping("/{itemId}/comment")

@@ -10,17 +10,18 @@ public class ItemMapper {
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
-                item.getAvailable()
+                item.getAvailable(),
+                item.getRequestId()
         );
     }
 
     public static Item fromDtoToItem(ItemDto itemDto) {
-        return new Item(
-                itemDto.getId(),
-                itemDto.getName(),
-                itemDto.getDescription(),
-                itemDto.getAvailable()
-        );
+        Item item = Item.builder()
+                .id(itemDto.getId())
+                .name(itemDto.getName())
+                .description(itemDto.getDescription())
+                .available(itemDto.getAvailable()).build();
+        return item;
     }
 
     public static ItemWithDates toItemWithDatesDto(Item item) {

@@ -1,5 +1,7 @@
 package ru.practicum.shareit.booking.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -12,11 +14,11 @@ import java.util.List;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
-    List<Booking> findAllByBookerIdOrderByStartDesc(Long userId);
+    Page<Booking> findAllByBookerIdOrderByStartDesc(Long userId, Pageable page);
 
-    List<Booking> findAllByBookerIdAndEndIsBeforeOrderByStartDesc(Long userId, LocalDateTime now);
+    Page<Booking> findAllByBookerIdAndEndIsBeforeOrderByStartDesc(Long userId, LocalDateTime now, Pageable page);
 
-    List<Booking> findAllByBookerIdAndStartIsAfterOrderByStartDesc(Long userId, LocalDateTime now);
+    Page<Booking> findAllByBookerIdAndStartIsAfterOrderByStartDesc(Long userId, LocalDateTime now, Pageable page);
 
     @Query("select new ru.practicum.shareit.booking.model.Booking" +
             "(b.id, b.start, b.end, b.item, b.booker, b.status) " +
@@ -24,16 +26,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "where b.booker.id = ?1 " +
             "and (?2 between b.start and b.end) " +
             "order by b.start desc")
-    List<Booking> findAllByBookerIdCurrentBookings(Long userId, LocalDateTime now);
+    Page<Booking> findAllByBookerIdCurrentBookings(Long userId, LocalDateTime now, Pageable page);
 
-    List<Booking> findALLByBookerIdAndStatusOrderByStartDesc(Long userId, BookingStatus status);
+    Page<Booking> findALLByBookerIdAndStatusOrderByStartDesc(Long userId, BookingStatus status, Pageable page);
 
     @Query("select new ru.practicum.shareit.booking.model.Booking" +
             "(b.id, b.start, b.end, b.item, b.booker, b.status) " +
             "from Booking as b " +
             "where b.item.ownerId = ?1 " +
             "order by b.start desc")
-    List<Booking> findAllByOwnerIdOrderByStartDesc(Long ownerId);
+    Page<Booking> findAllByOwnerIdOrderByStartDesc(Long ownerId, Pageable page);
 
     @Query("select new ru.practicum.shareit.booking.model.Booking" +
             "(b.id, b.start, b.end, b.item, b.booker, b.status) " +
@@ -41,7 +43,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "where b.item.ownerId = ?1 " +
             "and b.end < ?2 " +
             "order by b.start desc")
-    List<Booking> findAllByOwnerIdAndEndIsBeforeOrderByStartDesc(Long ownerId, LocalDateTime now);
+    Page<Booking> findAllByOwnerIdAndEndIsBeforeOrderByStartDesc(Long ownerId, LocalDateTime now, Pageable page);
 
     @Query("select new ru.practicum.shareit.booking.model.Booking" +
             "(b.id, b.start, b.end, b.item, b.booker, b.status) " +
@@ -49,7 +51,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "where b.item.ownerId = ?1 " +
             "and b.start > ?2 " +
             "order by b.start desc")
-    List<Booking> findAllByOwnerIdAndStartAfterOrderByStartDesc(Long ownerId, LocalDateTime now);
+    Page<Booking> findAllByOwnerIdAndStartAfterOrderByStartDesc(Long ownerId, LocalDateTime now, Pageable page);
 
     @Query("select new ru.practicum.shareit.booking.model.Booking" +
             "(b.id, b.start, b.end, b.item, b.booker, b.status) " +
@@ -57,7 +59,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "where b.item.ownerId = ?1 " +
             "and (?2 between b.start and b.end) " +
             "order by b.start desc")
-    List<Booking> findAllByOwnerIdCurrentBookings(Long ownerId, LocalDateTime now);
+    Page<Booking> findAllByOwnerIdCurrentBookings(Long ownerId, LocalDateTime now, Pageable page);
 
     @Query("select new ru.practicum.shareit.booking.model.Booking" +
             "(b.id, b.start, b.end, b.item, b.booker, b.status) " +
@@ -65,7 +67,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "where b.item.ownerId = ?1 " +
             "and b.status = ?2 " +
             "order by b.start desc")
-    List<Booking> findAllByOwnerIdAndStatusOrderByStartDesc(Long ownerId, BookingStatus status);
+    Page<Booking> findAllByOwnerIdAndStatusOrderByStartDesc(Long ownerId, BookingStatus status, Pageable page);
 
     @Query("select new ru.practicum.shareit.booking.dto.BookingForItem(b.id, b.booker.id) " +
             "from Booking as b " +

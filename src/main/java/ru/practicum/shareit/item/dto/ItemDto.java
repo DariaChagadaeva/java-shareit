@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.dto;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
@@ -10,6 +11,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemDto {
     Long id;
@@ -19,4 +21,5 @@ public class ItemDto {
     String description;
     @NotNull
     Boolean available;
+    Long requestId;
 }
