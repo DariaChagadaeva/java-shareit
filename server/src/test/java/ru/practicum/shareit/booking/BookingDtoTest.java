@@ -13,6 +13,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,7 +23,7 @@ class BookingDtoTest {
 
     @Autowired
     JacksonTester<BookingDto> json;
-    LocalDateTime createdTime = LocalDateTime.now();
+    LocalDateTime createdTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
     LocalDateTime start = createdTime.plusHours(5);
     LocalDateTime end = createdTime.plusDays(2);
     UserDto userDto = new UserDto(1L, "user", "user@user.com");
