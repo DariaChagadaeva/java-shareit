@@ -1,10 +1,12 @@
 package ru.practicum.shareit.user.model;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
 
 @Entity
 @Table(name = "users", schema = "public")
@@ -19,7 +21,6 @@ public class User {
     @Column(name = "name")
     String name;
     @Column(name = "email", unique = true)
-    @Email
     String email;
 
     public User(String name, String email) {
